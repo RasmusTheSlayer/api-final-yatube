@@ -13,7 +13,6 @@ from .pagination import CustomLimitOffsetPagination
 
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
-    """ViewSet для групп (только чтение)"""
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
