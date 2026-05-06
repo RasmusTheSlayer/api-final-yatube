@@ -1,7 +1,8 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
+
 from posts.models import Post, Comment, Follow, Group
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -18,7 +19,6 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ('id', 'text', 'pub_date', 'author', 'group', 'image')
-        read_only_fields = ('author', 'pub_date')
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -29,7 +29,7 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ('id', 'author', 'post', 'text', 'created')
-        read_only_fields = ('author', 'post', 'created')
+        read_only_fields = ('post',)
 
 
 class FollowSerializer(serializers.ModelSerializer):
@@ -46,17 +46,18 @@ class FollowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Follow
         fields = ('id', 'user', 'following')
+        validators = [
+            serializers.UniqueTogetherValidator(
+                queryset=Follow.objects.all(),
+                fields=('user', 'following'),
+                message='Вы уже подписаны на этого пользователя'
+            )
+        ]
 
     def validate_following(self, value):
         request = self.context.get('request')
-        if request and request.user == value:
+        if request.user == value:
             raise serializers.ValidationError(
                 'Нельзя подписаться на самого себя'
             )
-
-        if Follow.objects.filter(user=request.user, following=value).exists():
-            raise serializers.ValidationError(
-                'Вы уже подписаны на этого пользователя'
-            )
-
         return value
