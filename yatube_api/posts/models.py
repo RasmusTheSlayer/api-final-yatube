@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
@@ -60,16 +59,6 @@ class Follow(models.Model):
                 name='prevent_self_follow'
             )
         ]
-
-    def clean(self):
-        if self.user == self.following:
-            raise ValidationError(
-                'Нельзя подписаться на самого себя'
-            )
-
-    def save(self, *args, **kwargs):
-        self.clean()
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.user} подписан на {self.following}'
